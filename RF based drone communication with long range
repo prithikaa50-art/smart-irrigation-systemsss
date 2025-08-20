@@ -1,0 +1,43 @@
+#include <SPI.h>
+#include <LoRa.h>
+
+#define SS 5    // LoRa module CS pin
+#define RST 14  // LoRa reset
+#define DIO0 2  // LoRa DIO0
+
+void setup() {
+  Serial.begin(9600);
+  while (!Serial);
+
+  LoRa.setPins(SS, RST, DIO0);
+
+  if (!LoRa.begin(433E6)) {  // Frequency: 433 MHz (or 868/915 depending on module)
+    Serial.println("Starting LoRa failed!");
+    while (1);
+  }
+  Serial.println("LoRa Drone Transmitter ready!");
+}
+
+void loop() {
+  // Example drone telemetry data
+  float altitude = 123.45;   // Replace with barometer/IMU value
+  float battery = 11.7;      // Replace with voltage sensor
+  float latitude = 12.9716;  // Replace with GPS
+  float longitude = 77.5946;
+
+  // Send data packet
+  LoRa.beginPacket();
+  LoRa.print("ALT:");
+  LoRa.print(altitude);
+  LoRa.print(", BAT:");
+  LoRa.print(battery);
+  LoRa.print(", LAT:");
+  LoRa.print(latitude, 6);
+  LoRa.print(", LON:");
+  LoRa.print(longitude, 6);
+  LoRa.endPacket();
+
+  Serial.println("Telemetry Sent!");
+
+  delay(1000);
+}
