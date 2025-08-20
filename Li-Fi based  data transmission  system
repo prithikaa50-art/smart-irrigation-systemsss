@@ -1,0 +1,32 @@
+const int ledPin = 9;   // Pin connected to the LED
+
+void setup() {
+  Serial.begin(9600);   // Start serial communication
+  pinMode(ledPin, OUTPUT);  // Set the LED pin as output
+}
+
+void loop() {
+  if (Serial.available() > 0) {
+    char data = Serial.read();  // Read one byte of data from the serial monitor
+    sendData(data);             // Call the function to send data
+  }
+}
+
+void sendData(char data) {
+  byte byteData = (byte)data;  // Convert the character to byte
+  for (int i = 7; i >= 0; i--) {
+    // Extract each bit (starting from the most significant bit)
+    int bitValue = (byteData >> i) & 1;
+
+    if (bitValue == 1) {
+      digitalWrite(ledPin, HIGH);  // LED ON for binary 1
+    } else {
+      digitalWrite(ledPin, LOW);   // LED OFF for binary 0
+    }
+
+    delay(100);  // Wait for a short period before sending the next bit
+  }
+
+  // A small delay between characters to make it readable on the receiver end
+  delay(200);
+}
