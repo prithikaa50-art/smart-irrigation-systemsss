@@ -1,0 +1,52 @@
+#include <ESP8266WiFi.h>
+#include <DHT.h>
+
+#define DHTPIN D4
+#define DHTTYPE DHT11
+#define SOIL_PIN A0
+
+DHT dht(DHTPIN, DHTTYPE);
+
+const char* ssid = "YourWiFiName";  
+const char* password = "YourWiFiPassword";
+const char* host = "api.thingspeak.com";   // Example: send data to ThingSpeak
+String apiKey = "YOUR_API_KEY";            // Replace with your ThingSpeak API Key
+
+void setup() {
+  Serial.begin(115200);
+  WiFi.begin(ssid, password);
+  Serial.print("Connecting to WiFi");
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+  Serial.println("\nWiFi connected!");
+  dht.begin();
+}
+
+void loop() {
+  // Read sensors
+  float h = dht.readHumidity();
+  float t = dht.readTemperature();
+  int soilValue = analogRead(SOIL_PIN);
+  int soilMoisture = map(soilValue, 1023, 0, 0, 100); // Convert to %
+
+  Serial.println("Temp: " + String(t) + " *C");
+  Serial.println("Humidity: " + String(h) + " %");
+  Serial.println("Soil Moisture: " + String(soilMoisture) + " %");
+
+  // Send to ThingSpeak
+  WiFiClient client;
+  if (client.connect(host, 80)) {
+    String url = "/update?api_key=" + apiKey +
+                 "&field1=" + String(t) +
+                 "&field2=" + String(h) +
+                 "&field3=" + String(soilMoisture);
+
+    client.print(String("GET ") + url + " HTTP/1.1\r\n" +
+                 "Host: " + host + "\r\n" +
+                 "Connection: close\r\n\r\n");
+    Serial.println("Data sent to ThingSpeak!");
+  }
+  delay(20000); // 20 sec delay (ThingSpeak allows 15s minimum)
+}
